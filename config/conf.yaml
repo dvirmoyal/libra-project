@@ -1,0 +1,12 @@
+server:
+  port: "8080"
+statsd:
+  host: "127.0.0.1"
+  port: "8125"
+  serviceName: "server"
+db:
+  host: "localhost"
+  port: "5432"
+  user: ""
+  password: ""
+  database: ""
