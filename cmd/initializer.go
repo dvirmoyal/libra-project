@@ -25,7 +25,7 @@ func initialize() {
 	// Load the configuration
 	c, err := config.LoadConfig()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to load configuration")
+		log.Error().Err(err).Msg("Failed to load configuration ")
 		panic(err)
 	}
 	// Initialize metrics with statsd sink
