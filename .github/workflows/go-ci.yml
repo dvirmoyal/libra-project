@@ -5,13 +5,14 @@ on:
 env:
   IMAGE_NAME: libra
   REGISTRY: ghcr.io
-  RUN_CODE_SECURITY: false  # Set to true to enable code security checks
+  RUN_CODE_SECURITY: 'false'  # Set to true to enable code security checks
 
 jobs:
   code-security:
     name: Code Security Checks
     runs-on: ubuntu-latest
-    if: ${{ env.RUN_CODE_SECURITY == 'true' }}  # Skip this job based on environment variable
+    # Correct way to reference environment variables in conditions
+    if: ${{ env.RUN_CODE_SECURITY == 'true' }}
     steps:
       - name: Checkout the source code
         uses: actions/checkout@v3
@@ -30,8 +31,8 @@ jobs:
 
   build-and-release:
     name: Build, Scan and Release
-    # Only needs code-security if it's running
-    needs: ${{ env.RUN_CODE_SECURITY == 'true' && fromJSON('["code-security"]') || fromJSON('[]') }}
+    # Fixed conditional needs expression
+    needs: ${{ (env.RUN_CODE_SECURITY == 'true' && fromJSON('["code-security"]')) || fromJSON('[]') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -127,7 +128,7 @@ jobs:
               - `${{ env.VERSION }}`
             
             **Security Scan Status:**
-            ${{ env.RUN_CODE_SECURITY == 'true' && '- Code security scan completed' || '- Code security scan skipped' }}
+            ${{ (env.RUN_CODE_SECURITY == 'true' && '- Code security scan completed') || '- Code security scan skipped' }}
             - Dockerfile security scan completed
             - Container image scan completed and approved
           draft: false
