@@ -1,0 +1,58 @@
+# Git and version control related
+.git
+.gitignore
+.pre-commit-config.yaml
+.cz.toml
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+/bin/
+/dist/
+/build/
+/out/
+
+# Test files
+**/*_test.go
+**/test/
+**/tests/
+
+# Log files
+/log/
+/logs/
+*.log
+
+# Temporary files
+/tmp/
+*.tmp
+
+# Environment variables and secrets
+.env
+.env.*
+*.env
+**/*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+*.cert
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+
+# Dependencies that will be installed in the container
+/vendor/
+
+# Other unnecessary files
+.DS_Store
+Thumbs.db
