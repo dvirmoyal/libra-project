@@ -24,7 +24,7 @@ jobs:
       - name: Run gosec Security Scanner
         uses: securego/gosec@master
         with:
-        args: ./...
+         args: ./...
 
   docker-build-and-scan:
     name: Docker Build and Security Scan
