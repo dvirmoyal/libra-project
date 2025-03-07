@@ -1,7 +1,7 @@
 name: GoApp-CI
 on:
   push:
-    branches: ["PROD"]
+    branches: ["master"]
 env:
   IMAGE_NAME: libra
   REGISTRY: ghcr.io
