@@ -98,6 +98,10 @@ func initialize() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grade ID"})
 			return
 		}
+		if id < 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be a positive number"})
+			return
+		}
 		grade, err := handler.GetGradeByID(uint(id))
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Grade not found"})
@@ -132,6 +136,10 @@ func initialize() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grade ID"})
 			return
 		}
+		if id < 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be a positive number"})
+			return
+		}
 		existingGrade, err := handler.GetGradeByID(uint(id))
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Grade not found"})
@@ -164,6 +172,10 @@ func initialize() {
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grade ID"})
+			return
+		}
+		if id < 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be a positive number"})
 			return
 		}
 		grade, err := handler.GetGradeByID(uint(id))
