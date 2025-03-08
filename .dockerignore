@@ -3,6 +3,7 @@
 .gitignore
 .pre-commit-config.yaml
 .cz.toml
+.env
 
 # IDE specific files
 .idea/

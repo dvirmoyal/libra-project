@@ -1,0 +1,66 @@
+# Golang specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.prof
+/vendor/
+/bin/
+/dist/
+
+# Application specific
+.env
+.env.*
+*.env
+**/*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+*.cert
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+/build/
+/out/
+*.log
+/log/
+/logs/
+/tmp/
+*.tmp
+
+# Version management and local tools
+.commitizen.yaml
+.commitizen.json
+.czrc
+
+# Test files
+coverage.html
+coverage.out
+/coverage/
+
+# Docker and deployment specific
+.dockerignore
+
+# Dependencies
+go.work
+
+# Debug files
+__debug_bin
+debug.test
+
+# Certificates (which might be used for local development)
+*.pem
+*.key
