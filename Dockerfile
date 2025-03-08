@@ -1,5 +1,5 @@
 # Stage 1: Build {check new security update of the image}
-FROM golang:1.22.1-alpine3.19@sha256:89c315d402dc99db9de85f30a0bfa7d29cee950c7362c6b34b30e84a0291b0a5 AS builder
+FROM golang:1.22.1-alpine3.19@sha256:43c094ad24b6ac0546c62193baeb3e6e49ce14d3250845d166c77c25f64b0386 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -18,6 +18,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
 
 # Stage 2: Create minimal runtime image
 FROM alpine:3.19.1@sha256:c5b1261d6d3e43071626931fc004f70149baeba2c8ec672bd4f27761f8e1ad6b
+
 
 # Create non-root user only
 RUN addgroup -g 1001 appgroup && \
