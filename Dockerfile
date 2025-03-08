@@ -1,5 +1,5 @@
 # Stage 1: Build {check new security update of the image}
-FROM golang:1.22.1-alpine3.19@sha256:0dda862e691922eb0353060508f11c4a2ade2c6952356123ccac37068ce542bd AS builder
+FROM golang:1.22.1-alpine3.19@sha256:89c315d402dc99db9de85f30a0bfa7d29cee950c7362c6b34b30e84a0291b0a5 AS builder
 
 # Set working directory
 WORKDIR /app
