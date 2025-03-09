@@ -45,7 +45,7 @@ deployment:
     - name: LIBRA_SERVER_PORT
       value: "8080"
     - name: LIBRA_STATSD_HOST
-      value: "statsd"
+      value: "statsd-prometheus-statsd-exporter"
     - name: LIBRA_STATSD_PORT
       value: "8125"
     - name: LIBRA_STATSD_SERVICENAME
@@ -54,6 +54,7 @@ deployment:
       value: "postgres-postgresql"
     - name: LIBRA_DB_PORT
       value: "5432"
+    # שימוש בסוד שכבר קיים בקלאסטר
     - name: LIBRA_DB_USER
       valueFrom:
         secretKeyRef:
@@ -69,16 +70,6 @@ deployment:
         secretKeyRef:
           name: db-credentials
           key: POSTGRES_DB
-  additionalPodAnnotations:
-    vault.hashicorp.com/agent-inject: "true"
-    vault.hashicorp.com/role: "grades-api"
-    vault.hashicorp.com/agent-inject-secret-db-creds: "kv/data/grades-api/db"
-    vault.hashicorp.com/agent-inject-template-db-creds: |
-      {{- with secret "kv/data/grades-api/db" -}}
-      export LIBRA_DB_USER="{{ .Data.data.POSTGRES_USER }}"
-      export LIBRA_DB_PASSWORD="{{ .Data.data.POSTGRES_PASSWORD }}"
-      export LIBRA_DB_DATABASE="{{ .Data.data.POSTGRES_DB }}"
-      {{- end -}}
 
 service:
   enabled: true
@@ -109,6 +100,5 @@ configMap:
 sealedSecret:
   enabled: false
 
-# הסרנו את הגדרות CSI כי אנחנו משתמשים במודל annotation במקום
 secretProviderClass:
   enabled: false
