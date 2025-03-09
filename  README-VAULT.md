@@ -82,7 +82,7 @@ The application supports retrieving database credentials from HashiCorp Vault. T
 1. The Kubernetes pod is configured with Vault Agent Injector annotations in the deployment.
 2. The Vault Agent injects the secrets into the pod at `/vault/secrets/db-creds`.
 3. During initialization, the application checks for the existence of this file.
-4. If the file exists, the application loads the environment variables from it.
+4. If the file exists, the application reads the environment variables from it and sets them in the application's environment.
 5. These environment variables override any defaults or settings in the configuration file.
 
 ### Relevant Code
@@ -93,15 +93,28 @@ The following code in `cmd/initializer.go` handles the loading of secrets from V
 // Check for Vault secrets and load them if available
 vaultSecretsFile := "/vault/secrets/db-creds"
 if _, err := os.Stat(vaultSecretsFile); err == nil {
-    log.Info().Msgf("Found Vault secrets file. Loading environment variables from it.")
-    cmd := exec.Command("sh", "-c", "source "+vaultSecretsFile)
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    if err := cmd.Run(); err != nil {
-        log.Error().Err(err).Msg("Failed to source Vault secrets")
-    } else {
-        log.Info().Msg("Successfully loaded environment variables from Vault")
-    }
+log.Info().Msgf("Found Vault secrets file. Loading environment variables from it.")
+data, err := os.ReadFile(vaultSecretsFile)
+if err != nil {
+log.Error().Err(err).Msg("Failed to read Vault secrets file")
+} else {
+// Parse the export commands and set env vars
+lines := strings.Split(string(data), "\n")
+for _, line := range lines {
+line = strings.TrimSpace(line)
+if strings.HasPrefix(line, "export ") {
+parts := strings.SplitN(strings.TrimPrefix(line, "export "), "=", 2)
+if len(parts) == 2 {
+// Remove quotes if present
+varName := strings.TrimSpace(parts[0])
+value := strings.Trim(strings.TrimSpace(parts[1]), "\"'")
+os.Setenv(varName, value)
+log.Info().Msgf("Set environment variable %s", varName)
+}
+}
+}
+log.Info().Msg("Successfully loaded environment variables from Vault")
+}
 }
 ```
 

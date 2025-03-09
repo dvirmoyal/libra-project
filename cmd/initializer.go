@@ -13,8 +13,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
-	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"net/http"
@@ -29,12 +29,25 @@ func initialize() {
 	vaultSecretsFile := "/vault/secrets/db-creds"
 	if _, err := os.Stat(vaultSecretsFile); err == nil {
 		log.Info().Msgf("Found Vault secrets file. Loading environment variables from it.")
-		cmd := exec.Command("sh", "-c", "source "+vaultSecretsFile)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			log.Error().Err(err).Msg("Failed to source Vault secrets")
+		data, err := os.ReadFile(vaultSecretsFile)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to read Vault secrets file")
 		} else {
+			// Parse the export commands and set env vars
+			lines := strings.Split(string(data), "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "export ") {
+					parts := strings.SplitN(strings.TrimPrefix(line, "export "), "=", 2)
+					if len(parts) == 2 {
+						// Remove quotes if present
+						varName := strings.TrimSpace(parts[0])
+						value := strings.Trim(strings.TrimSpace(parts[1]), "\"'")
+						os.Setenv(varName, value)
+						log.Info().Msgf("Set environment variable %s", varName)
+					}
+				}
+			}
 			log.Info().Msg("Successfully loaded environment variables from Vault")
 		}
 	}
