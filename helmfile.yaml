@@ -1,0 +1,147 @@
+repositories:
+  - name: stakater
+    url: https://stakater.github.io/stakater-charts
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: hashicorp
+    url: https://helm.releases.hashicorp.com
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: elastic
+    url: https://helm.elastic.co
+
+releases:
+  # PostgreSQL Database
+  - name: postgres
+    namespace: dvir-api
+    chart: bitnami/postgresql
+    version: 12.1.5
+    values:
+      - auth:
+          existingSecret: db-credentials
+        primary:
+          persistence:
+            enabled: true
+            size: 1Gi
+
+  # Vault לניהול סודות עם תצורה המועדפת
+  - name: vault
+    namespace: dvir-api
+    chart: hashicorp/vault
+    version: 0.25.0
+    values:
+      - server:
+          ui: true
+          ha:
+            enabled: true
+            replicas: 1
+            raft:
+              enabled: true
+              setNodeId: true
+              config: |
+                cluster_name = "vault-integrated-storage"
+                storage "raft" {
+                  path = "/vault/data/"
+                }
+                listener "tcp" {
+                  address         = "[::]:8200"
+                  cluster_address = "[::]:8201"
+                  tls_disable     = "true"
+                }
+                seal "awskms" {
+                  region     = "us-east-1"
+                  kms_key_id = "arn:aws:kms:us-east-1:041001457071:key/63dfa068-1429-4fdf-ae1d-af716bff2a14"
+                  access_key = "AKIAQTC7ASWX5WKBNQOX"
+                  secret_key = "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"
+                }
+                service_registration "kubernetes" {}
+          disable_mlock: true
+        seal:
+          type: awskms
+          awskms:
+            region: us-east-1
+            kms_key_id: "63dfa068-1429-4fdf-ae1d-af716bff2a14"
+        affinity: ""
+        injector:
+          enabled: true  # הפעלת Injector במקום CSI
+
+  # StatsD Exporter
+  - name: statsd
+    namespace: dvir-api
+    chart: prometheus-community/prometheus-statsd-exporter
+    version: 0.7.0
+
+  # Prometheus
+  - name: prometheus
+    namespace: dvir-api
+    chart: prometheus-community/prometheus
+    version: 25.8.0
+
+  # Grafana
+  - name: grafana
+    namespace: dvir-api
+    chart: bitnami/grafana
+    version: 9.0.1
+    values:
+      - datasources:
+          datasources.yaml:
+            apiVersion: 1
+            datasources:
+              - name: Prometheus
+                type: prometheus
+                url: http://prometheus-server.dvir-api.svc.cluster.local
+                access: proxy
+                isDefault: true
+
+  # Elasticsearch
+  - name: elasticsearch
+    namespace: dvir-api
+    chart: elastic/elasticsearch
+    version: 7.17.3
+    values:
+      - replicas: 1
+        minimumMasterNodes: 1
+
+  # Kibana
+  - name: kibana
+    namespace: dvir-api
+    chart: elastic/kibana
+    version: 7.17.3
+    values:
+      - elasticsearchHosts: "http://elasticsearch-master:9200"
+
+  # Filebeat
+  - name: filebeat
+    namespace: dvir-api
+    chart: elastic/filebeat
+    version: 7.17.3
+    values:
+      - daemonset:
+          enabled: true
+        filebeatConfig:
+          filebeat.yml: |
+            filebeat.inputs:
+            - type: container
+              paths:
+                - /var/log/containers/grades-api-*.log
+              processors:
+                - add_kubernetes_metadata:
+                    host: ${NODE_NAME}
+                    matchers:
+                    - logs_path:
+                        logs_path: "/var/log/containers/"
+            output.elasticsearch:
+              hosts: ["http://elasticsearch-master:9200"]
+              index: "grades-api-%{+yyyy.MM.dd}"
+
+  # האפליקציה שלנו
+  - name: grades-api
+    namespace: dvir-api
+    chart: stakater/application
+    version: 0.1.0
+    values:
+      - ./helm/grades-api/values.yaml
+    needs:
+      - dvir-api/postgres
+      - dvir-api/vault
+      - dvir-api/statsd

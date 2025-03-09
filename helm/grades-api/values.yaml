@@ -1,0 +1,114 @@
+# Main application configuration
+applicationName: "grades-api"
+
+# Deployment configuration
+deployment:
+  enabled: true
+  replicas: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    runAsGroup: 1001
+  containerSecurityContext:
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+  image:
+    repository: "ghcr.io/dvirmoyal/libra"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  ports:
+    - containerPort: 8080
+      name: http
+      protocol: TCP
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 200m
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /actuator/health
+      port: 8080
+    initialDelaySeconds: 20
+    periodSeconds: 10
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /actuator/health
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 15
+  env:
+    - name: LIBRA_SERVER_PORT
+      value: "8080"
+    - name: LIBRA_STATSD_HOST
+      value: "statsd"
+    - name: LIBRA_STATSD_PORT
+      value: "8125"
+    - name: LIBRA_STATSD_SERVICENAME
+      value: "grades-service"
+    - name: LIBRA_DB_HOST
+      value: "postgres-postgresql"
+    - name: LIBRA_DB_PORT
+      value: "5432"
+    - name: LIBRA_DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: db-credentials
+          key: POSTGRES_USER
+    - name: LIBRA_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-credentials
+          key: POSTGRES_PASSWORD
+    - name: LIBRA_DB_DATABASE
+      valueFrom:
+        secretKeyRef:
+          name: db-credentials
+          key: POSTGRES_DB
+  additionalPodAnnotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "grades-api"
+    vault.hashicorp.com/agent-inject-secret-db-creds: "kv/data/grades-api/db"
+    vault.hashicorp.com/agent-inject-template-db-creds: |
+      {{- with secret "kv/data/grades-api/db" -}}
+      export LIBRA_DB_USER="{{ .Data.data.POSTGRES_USER }}"
+      export LIBRA_DB_PASSWORD="{{ .Data.data.POSTGRES_PASSWORD }}"
+      export LIBRA_DB_DATABASE="{{ .Data.data.POSTGRES_DB }}"
+      {{- end -}}
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - port: 8080
+      name: http
+      targetPort: 8080
+
+rbac:
+  enabled: true
+  serviceAccount:
+    enabled: true
+    name: "grades-api"
+
+ingress:
+  enabled: false
+
+route:
+  enabled: false
+
+forecastle:
+  enabled: false
+
+configMap:
+  enabled: false
+
+sealedSecret:
+  enabled: false
+
+# הסרנו את הגדרות CSI כי אנחנו משתמשים במודל annotation במקום
+secretProviderClass:
+  enabled: false
