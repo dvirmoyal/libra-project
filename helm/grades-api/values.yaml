@@ -72,14 +72,16 @@ deployment:
   additionalPodAnnotations:
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/role: "grades-api"
-    vault.hashicorp.com/agent-inject-secret-db-creds: "kv/data/grades-api/db"
-    vault.hashicorp.com/agent-inject-template-db-creds: |
-      {{- with secret "kv/data/grades-api/db" -}}
-      export LIBRA_DB_USER="{{ .Data.data.POSTGRES_USER }}"
-      export LIBRA_DB_PASSWORD="{{ .Data.data.POSTGRES_PASSWORD }}"
-      export LIBRA_DB_DATABASE="{{ .Data.data.POSTGRES_DB }}"
-      {{- end -}}
-
+    vault.hashicorp.com/agent-inject-secret-db-credentials: "kv/grades-api/db"
+    vault.hashicorp.com/agent-inject-template-db-credentials: |
+      {{ with secret "kv/grades-api/db" -}}
+      LIBRA_DB_USER={{ .Data.data.POSTGRES_USER }}
+      LIBRA_DB_PASSWORD={{ .Data.data.POSTGRES_PASSWORD }}
+      LIBRA_DB_DATABASE={{ .Data.data.POSTGRES_DB }}
+      {{- end }}
+    vault.hashicorp.com/agent-inject-command: "sh"
+    vault.hashicorp.com/agent-run-as-same-user: "true"
+    vault.hashicorp.com/agent-inject-mode-db-credentials: "env"
 service:
   enabled: true
   type: ClusterIP

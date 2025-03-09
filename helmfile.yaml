@@ -24,7 +24,7 @@ releases:
             enabled: true
             size: 1Gi
 
-  # Vault לניהול סודות עם תצורה המועדפת
+  # Vault
   - name: vault
     namespace: dvir-api
     chart: hashicorp/vault
@@ -48,22 +48,10 @@ releases:
                   cluster_address = "[::]:8201"
                   tls_disable     = "true"
                 }
-                seal "awskms" {
-                  region     = "us-east-1"
-                  kms_key_id = "arn:aws:kms:us-east-1:041001457071:key/63dfa068-1429-4fdf-ae1d-af716bff2a14"
-                  access_key = "AKIAQTC7ASWX5WKBNQOX"
-                  secret_key = "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"
-                }
                 service_registration "kubernetes" {}
           disable_mlock: true
-        seal:
-          type: awskms
-          awskms:
-            region: us-east-1
-            kms_key_id: "63dfa068-1429-4fdf-ae1d-af716bff2a14"
-        affinity: ""
         injector:
-          enabled: true  # הפעלת Injector במקום CSI
+          enabled: true
 
   # StatsD Exporter
   - name: statsd

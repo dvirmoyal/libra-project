@@ -12,6 +12,8 @@ import (
 	healthGo "github.com/hellofresh/health-go/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"os"
+	"os/exec"
 	"strconv"
 	"time"
 
@@ -22,6 +24,21 @@ func initialize() {
 	// Initialize zerolog logger
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Info().Msgf("Initializing application")
+
+	// Check for Vault secrets and load them if available
+	vaultSecretsFile := "/vault/secrets/db-creds"
+	if _, err := os.Stat(vaultSecretsFile); err == nil {
+		log.Info().Msgf("Found Vault secrets file. Loading environment variables from it.")
+		cmd := exec.Command("sh", "-c", "source "+vaultSecretsFile)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			log.Error().Err(err).Msg("Failed to source Vault secrets")
+		} else {
+			log.Info().Msg("Successfully loaded environment variables from Vault")
+		}
+	}
+
 	// Load the configuration
 	c, err := config.LoadConfig()
 	if err != nil {
