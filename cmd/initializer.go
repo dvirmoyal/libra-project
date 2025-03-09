@@ -26,6 +26,7 @@ func initialize() {
 	log.Info().Msgf("Initializing application")
 
 	// Check for Vault secrets and load them if available
+	// Check for Vault secrets and load them if available
 	vaultSecretsFile := "/vault/secrets/db-creds"
 	if _, err := os.Stat(vaultSecretsFile); err == nil {
 		log.Info().Msgf("Found Vault secrets file. Loading environment variables from it.")
@@ -43,8 +44,11 @@ func initialize() {
 						// Remove quotes if present
 						varName := strings.TrimSpace(parts[0])
 						value := strings.Trim(strings.TrimSpace(parts[1]), "\"'")
-						os.Setenv(varName, value)
-						log.Info().Msgf("Set environment variable %s", varName)
+						if err := os.Setenv(varName, value); err != nil {
+							log.Error().Err(err).Msgf("Failed to set environment variable %s", varName)
+						} else {
+							log.Info().Msgf("Set environment variable %s", varName)
+						}
 					}
 				}
 			}
