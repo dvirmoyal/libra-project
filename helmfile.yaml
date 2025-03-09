@@ -24,7 +24,7 @@ releases:
             enabled: true
             size: 1Gi
 
-  # Vault
+  # Vault for secrets management
   - name: vault
     namespace: dvir-api
     chart: hashicorp/vault
@@ -53,24 +53,78 @@ releases:
         injector:
           enabled: true
 
-  # StatsD Exporter
+  # StatsD Exporter - converts DogStatsD metrics to Prometheus format
   - name: statsd
     namespace: dvir-api
     chart: prometheus-community/prometheus-statsd-exporter
     version: 0.7.0
+    values:
+      - serviceMonitor:
+          # Enable ServiceMonitor for Prometheus Operator
+          enabled: true
+          additionalLabels:
+            release: prometheus
+        statsd:
+          # Configure StatsD to Prometheus mappings
+          mappingConfig:
+            mappings:
+              # API endpoint metrics
+              - match: "get_grades_time"
+                name: "grades_api_get_all_duration"
+                timer_type: "histogram"
+                help: "Duration of get all grades API requests"
 
-  # Prometheus
+              - match: "get_grades_id_time"
+                name: "grades_api_get_by_id_duration"
+                timer_type: "histogram"
+                help: "Duration of get grade by ID API requests"
+
+              - match: "post_grades_time"
+                name: "grades_api_create_duration"
+                timer_type: "histogram"
+                help: "Duration of create grade API requests"
+
+              - match: "put_grades_id_time"
+                name: "grades_api_update_duration"
+                timer_type: "histogram"
+                help: "Duration of update grade API requests"
+
+              - match: "delete_grades_id_time"
+                name: "grades_api_delete_duration"
+                timer_type: "histogram"
+                help: "Duration of delete grade API requests"
+
+              - match: "get_grades_avg_time"
+                name: "grades_api_get_avg_duration"
+                timer_type: "histogram"
+                help: "Duration of get average grade API requests"
+
+  # Prometheus - metrics collection and storage
   - name: prometheus
     namespace: dvir-api
     chart: prometheus-community/prometheus
     version: 25.8.0
+    values:
+      - server:
+          # Keep metrics for 15 days
+          retention: 15d
+          persistentVolume:
+            enabled: true
+            size: 8Gi
+        # Allow Prometheus to discover all ServiceMonitors
+        serviceMonitorSelectorNilUsesHelmValues: false
+        serviceMonitorSelector: {}
 
-  # Grafana
+  # Grafana - visualization platform
   - name: grafana
     namespace: dvir-api
     chart: bitnami/grafana
     version: 9.0.1
     values:
+      - admin:
+          # Default password for admin user (change in production)
+          password: "admin"
+      # Configure Prometheus data source
       - datasources:
           datasources.yaml:
             apiVersion: 1
@@ -81,7 +135,7 @@ releases:
                 access: proxy
                 isDefault: true
 
-  # Elasticsearch
+  # Elasticsearch - log storage and indexing
   - name: elasticsearch
     namespace: dvir-api
     chart: elastic/elasticsearch
@@ -90,7 +144,7 @@ releases:
       - replicas: 1
         minimumMasterNodes: 1
 
-  # Kibana
+  # Kibana - log visualization and exploration
   - name: kibana
     namespace: dvir-api
     chart: elastic/kibana
@@ -98,7 +152,7 @@ releases:
     values:
       - elasticsearchHosts: "http://elasticsearch-master:9200"
 
-  # Filebeat
+  # Filebeat - log shipper
   - name: filebeat
     namespace: dvir-api
     chart: elastic/filebeat
@@ -122,7 +176,7 @@ releases:
               hosts: ["http://elasticsearch-master:9200"]
               index: "grades-api-%{+yyyy.MM.dd}"
 
-  # האפליקציה שלנו
+  # Main application
   - name: grades-api
     namespace: dvir-api
     chart: stakater/application

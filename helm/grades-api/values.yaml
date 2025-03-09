@@ -15,7 +15,7 @@ deployment:
   image:
     repository: "ghcr.io/dvirmoyal/libra"
     tag: "latest"
-    pullPolicy: IfNotPresent
+    pullPolicy: "Always"
   ports:
     - containerPort: 8080
       name: http
